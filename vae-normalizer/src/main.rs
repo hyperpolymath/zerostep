@@ -14,6 +14,7 @@ mod metadata;
 use anyhow::{Context, Result, bail};
 use clap::Parser;
 use csv::Writer;
+use image::{Rgb, RgbImage};
 use indicatif::{ProgressBar, ProgressStyle};
 use rand::prelude::*;
 use rand_chacha::ChaCha20Rng;
@@ -160,6 +161,51 @@ enum Commands {
     Hash {
         /// File to hash
         file: PathBuf,
+    },
+
+    /// Compress dataset by storing diffs instead of full VAE images
+    Compress {
+        /// Path to the input dataset (with Original/ and VAE/ directories)
+        #[arg(short, long)]
+        dataset: PathBuf,
+
+        /// Path to the output compressed dataset
+        #[arg(short, long)]
+        output: PathBuf,
+
+        /// Number of parallel workers (0 = auto)
+        #[arg(short = 'j', long, default_value = "0")]
+        jobs: usize,
+    },
+
+    /// Decompress/reconstruct VAE images from Original + Diff
+    Decompress {
+        /// Path to the compressed dataset (with Original/ and Diff/ directories)
+        #[arg(short, long)]
+        dataset: PathBuf,
+
+        /// Path to output reconstructed VAE images
+        #[arg(short, long)]
+        output: PathBuf,
+
+        /// Number of parallel workers (0 = auto)
+        #[arg(short = 'j', long, default_value = "0")]
+        jobs: usize,
+    },
+
+    /// Reconstruct a single VAE image from Original + Diff
+    Reconstruct {
+        /// Path to the original image
+        #[arg(short, long)]
+        original: PathBuf,
+
+        /// Path to the diff image
+        #[arg(short, long)]
+        diff: PathBuf,
+
+        /// Output path for reconstructed VAE image
+        #[arg(short = 'o', long)]
+        output: PathBuf,
     },
 }
 
@@ -780,6 +826,290 @@ fn cmd_hash(file: PathBuf) -> Result<()> {
     Ok(())
 }
 
+/// Compute diff image: diff = VAE - Original + 128 (offset to handle signed values)
+fn compute_diff_image(original: &RgbImage, vae: &RgbImage) -> Result<RgbImage> {
+    if original.dimensions() != vae.dimensions() {
+        bail!(
+            "Image dimensions mismatch: original {:?} vs vae {:?}",
+            original.dimensions(),
+            vae.dimensions()
+        );
+    }
+
+    let (width, height) = original.dimensions();
+    let mut diff = RgbImage::new(width, height);
+
+    for y in 0..height {
+        for x in 0..width {
+            let orig_pixel = original.get_pixel(x, y);
+            let vae_pixel = vae.get_pixel(x, y);
+
+            // Compute diff with offset: diff = vae - original + 128
+            // This maps [-255, 255] to [0-127, 128, 129-383] but we clamp to [0, 255]
+            let r = ((vae_pixel[0] as i16 - orig_pixel[0] as i16 + 128).clamp(0, 255)) as u8;
+            let g = ((vae_pixel[1] as i16 - orig_pixel[1] as i16 + 128).clamp(0, 255)) as u8;
+            let b = ((vae_pixel[2] as i16 - orig_pixel[2] as i16 + 128).clamp(0, 255)) as u8;
+
+            diff.put_pixel(x, y, Rgb([r, g, b]));
+        }
+    }
+
+    Ok(diff)
+}
+
+/// Reconstruct VAE image: vae = original + diff - 128
+fn reconstruct_vae_image(original: &RgbImage, diff: &RgbImage) -> Result<RgbImage> {
+    if original.dimensions() != diff.dimensions() {
+        bail!(
+            "Image dimensions mismatch: original {:?} vs diff {:?}",
+            original.dimensions(),
+            diff.dimensions()
+        );
+    }
+
+    let (width, height) = original.dimensions();
+    let mut vae = RgbImage::new(width, height);
+
+    for y in 0..height {
+        for x in 0..width {
+            let orig_pixel = original.get_pixel(x, y);
+            let diff_pixel = diff.get_pixel(x, y);
+
+            // Reconstruct: vae = original + diff - 128
+            let r = ((orig_pixel[0] as i16 + diff_pixel[0] as i16 - 128).clamp(0, 255)) as u8;
+            let g = ((orig_pixel[1] as i16 + diff_pixel[1] as i16 - 128).clamp(0, 255)) as u8;
+            let b = ((orig_pixel[2] as i16 + diff_pixel[2] as i16 - 128).clamp(0, 255)) as u8;
+
+            vae.put_pixel(x, y, Rgb([r, g, b]));
+        }
+    }
+
+    Ok(vae)
+}
+
+/// Compress dataset by converting VAE images to diffs
+fn cmd_compress(dataset: PathBuf, output: PathBuf, _jobs: usize) -> Result<()> {
+    println!("Compressing VAE dataset to diff format");
+    println!("======================================");
+    println!("Input:  {}", dataset.display());
+    println!("Output: {}", output.display());
+    println!();
+
+    let original_dir = dataset.join("Original");
+    let vae_dir = dataset.join("VAE");
+
+    if !original_dir.exists() {
+        bail!("Original directory not found: {}", original_dir.display());
+    }
+    if !vae_dir.exists() {
+        bail!("VAE directory not found: {}", vae_dir.display());
+    }
+
+    // Create output directories
+    let out_original_dir = output.join("Original");
+    let out_diff_dir = output.join("Diff");
+    fs::create_dir_all(&out_original_dir)?;
+    fs::create_dir_all(&out_diff_dir)?;
+
+    // Collect all original images
+    let mut pairs: Vec<(PathBuf, PathBuf, String)> = Vec::new();
+    for entry in WalkDir::new(&original_dir)
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.file_type().is_file())
+    {
+        let orig_path = entry.path().to_path_buf();
+        if let Some(ext) = orig_path.extension() {
+            let ext_lower = ext.to_string_lossy().to_lowercase();
+            if ["png", "jpg", "jpeg", "webp"].contains(&ext_lower.as_str()) {
+                let stem = orig_path.file_stem()
+                    .map(|s| s.to_string_lossy().to_string())
+                    .unwrap_or_default();
+
+                // Look for matching VAE image
+                for vae_ext in &["png", "jpg", "jpeg", "webp"] {
+                    let vae_path = vae_dir.join(format!("{}.{}", stem, vae_ext));
+                    if vae_path.exists() {
+                        pairs.push((orig_path.clone(), vae_path, stem.clone()));
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    if pairs.is_empty() {
+        bail!("No matching image pairs found");
+    }
+
+    println!("Found {} image pairs to compress", pairs.len());
+
+    let progress = ProgressBar::new(pairs.len() as u64);
+    progress.set_style(ProgressStyle::default_bar()
+        .template("[{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} ({eta})")
+        .unwrap()
+        .progress_chars("#>-"));
+
+    let mut total_original_size: u64 = 0;
+    let mut total_vae_size: u64 = 0;
+    let mut total_diff_size: u64 = 0;
+
+    for (orig_path, vae_path, stem) in &pairs {
+        // Load images
+        let original = image::open(orig_path)
+            .with_context(|| format!("Failed to open original: {}", orig_path.display()))?
+            .to_rgb8();
+        let vae = image::open(vae_path)
+            .with_context(|| format!("Failed to open VAE: {}", vae_path.display()))?
+            .to_rgb8();
+
+        // Compute diff
+        let diff = compute_diff_image(&original, &vae)?;
+
+        // Save original (copy or re-encode)
+        let out_orig_path = out_original_dir.join(format!("{}.png", stem));
+        original.save(&out_orig_path)
+            .with_context(|| format!("Failed to save original: {}", out_orig_path.display()))?;
+
+        // Save diff (PNG compresses diffs well due to low entropy)
+        let out_diff_path = out_diff_dir.join(format!("{}.png", stem));
+        diff.save(&out_diff_path)
+            .with_context(|| format!("Failed to save diff: {}", out_diff_path.display()))?;
+
+        // Track sizes
+        total_original_size += fs::metadata(orig_path).map(|m| m.len()).unwrap_or(0);
+        total_vae_size += fs::metadata(vae_path).map(|m| m.len()).unwrap_or(0);
+        total_diff_size += fs::metadata(&out_diff_path).map(|m| m.len()).unwrap_or(0);
+
+        progress.inc(1);
+    }
+
+    progress.finish_with_message("Compression complete");
+
+    // Print stats
+    let original_total = total_original_size + total_vae_size;
+    let compressed_total = total_original_size + total_diff_size;
+    let savings = original_total as f64 - compressed_total as f64;
+    let ratio = compressed_total as f64 / original_total as f64;
+
+    println!();
+    println!("Compression Statistics");
+    println!("======================");
+    println!("Original dataset:   {:.2} MB", original_total as f64 / 1_000_000.0);
+    println!("  - Original imgs:  {:.2} MB", total_original_size as f64 / 1_000_000.0);
+    println!("  - VAE imgs:       {:.2} MB", total_vae_size as f64 / 1_000_000.0);
+    println!("Compressed dataset: {:.2} MB", compressed_total as f64 / 1_000_000.0);
+    println!("  - Original imgs:  {:.2} MB", total_original_size as f64 / 1_000_000.0);
+    println!("  - Diff imgs:      {:.2} MB", total_diff_size as f64 / 1_000_000.0);
+    println!("Space saved:        {:.2} MB ({:.1}%)", savings / 1_000_000.0, (1.0 - ratio) * 100.0);
+    println!();
+    println!("Output written to: {}", output.display());
+
+    Ok(())
+}
+
+/// Decompress dataset by reconstructing VAE images from diffs
+fn cmd_decompress(dataset: PathBuf, output: PathBuf, _jobs: usize) -> Result<()> {
+    println!("Decompressing diff dataset to VAE format");
+    println!("========================================");
+    println!("Input:  {}", dataset.display());
+    println!("Output: {}", output.display());
+    println!();
+
+    let original_dir = dataset.join("Original");
+    let diff_dir = dataset.join("Diff");
+
+    if !original_dir.exists() {
+        bail!("Original directory not found: {}", original_dir.display());
+    }
+    if !diff_dir.exists() {
+        bail!("Diff directory not found: {}", diff_dir.display());
+    }
+
+    // Create output directory
+    fs::create_dir_all(&output)?;
+
+    // Collect all original images
+    let mut pairs: Vec<(PathBuf, PathBuf, String)> = Vec::new();
+    for entry in WalkDir::new(&original_dir)
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.file_type().is_file())
+    {
+        let orig_path = entry.path().to_path_buf();
+        if let Some(ext) = orig_path.extension() {
+            let ext_lower = ext.to_string_lossy().to_lowercase();
+            if ["png", "jpg", "jpeg", "webp"].contains(&ext_lower.as_str()) {
+                let stem = orig_path.file_stem()
+                    .map(|s| s.to_string_lossy().to_string())
+                    .unwrap_or_default();
+
+                // Look for matching diff image
+                let diff_path = diff_dir.join(format!("{}.png", stem));
+                if diff_path.exists() {
+                    pairs.push((orig_path.clone(), diff_path, stem.clone()));
+                }
+            }
+        }
+    }
+
+    if pairs.is_empty() {
+        bail!("No matching image pairs found");
+    }
+
+    println!("Found {} image pairs to decompress", pairs.len());
+
+    let progress = ProgressBar::new(pairs.len() as u64);
+    progress.set_style(ProgressStyle::default_bar()
+        .template("[{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} ({eta})")
+        .unwrap()
+        .progress_chars("#>-"));
+
+    for (orig_path, diff_path, stem) in &pairs {
+        // Load images
+        let original = image::open(orig_path)
+            .with_context(|| format!("Failed to open original: {}", orig_path.display()))?
+            .to_rgb8();
+        let diff = image::open(diff_path)
+            .with_context(|| format!("Failed to open diff: {}", diff_path.display()))?
+            .to_rgb8();
+
+        // Reconstruct VAE
+        let vae = reconstruct_vae_image(&original, &diff)?;
+
+        // Save reconstructed VAE image
+        let out_path = output.join(format!("{}.png", stem));
+        vae.save(&out_path)
+            .with_context(|| format!("Failed to save VAE: {}", out_path.display()))?;
+
+        progress.inc(1);
+    }
+
+    progress.finish_with_message("Decompression complete");
+
+    println!();
+    println!("Reconstructed {} VAE images to: {}", pairs.len(), output.display());
+
+    Ok(())
+}
+
+/// Reconstruct a single VAE image from Original + Diff
+fn cmd_reconstruct(original: PathBuf, diff: PathBuf, output: PathBuf) -> Result<()> {
+    let orig_img = image::open(&original)
+        .with_context(|| format!("Failed to open original: {}", original.display()))?
+        .to_rgb8();
+    let diff_img = image::open(&diff)
+        .with_context(|| format!("Failed to open diff: {}", diff.display()))?
+        .to_rgb8();
+
+    let vae = reconstruct_vae_image(&orig_img, &diff_img)?;
+    vae.save(&output)
+        .with_context(|| format!("Failed to save output: {}", output.display()))?;
+
+    println!("Reconstructed VAE image saved to: {}", output.display());
+    Ok(())
+}
+
 fn main() -> Result<()> {
     let args = Args::parse();
 
@@ -814,6 +1144,18 @@ fn main() -> Result<()> {
         }
 
         Commands::Hash { file } => cmd_hash(file),
+
+        Commands::Compress { dataset, output, jobs } => {
+            cmd_compress(dataset, output, jobs)
+        }
+
+        Commands::Decompress { dataset, output, jobs } => {
+            cmd_decompress(dataset, output, jobs)
+        }
+
+        Commands::Reconstruct { original, diff, output } => {
+            cmd_reconstruct(original, diff, output)
+        }
     }
 }
 

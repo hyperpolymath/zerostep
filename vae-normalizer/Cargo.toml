@@ -29,6 +29,8 @@ thiserror = "1.0"
 rayon = "1.10"
 # Progress indication
 indicatif = "0.17"
+# Image processing for diff compression
+image = "0.25"
 
 [profile.release]
 opt-level = 3

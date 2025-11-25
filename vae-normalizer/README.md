@@ -82,6 +82,24 @@ vae-normalizer stats -o /path/to/output --format json
 vae-normalizer hash /path/to/image.png
 ```
 
+### Compress Dataset (Diff Format)
+
+Reduce storage by ~50% by storing VAE images as diffs from originals:
+
+```bash
+# Compress dataset (creates Original/ + Diff/ structure)
+vae-normalizer compress -d /path/to/dataset -o /path/to/compressed
+
+# Decompress (reconstruct full VAE/ directory)
+vae-normalizer decompress -d /path/to/compressed -o /path/to/reconstructed-vae
+
+# Reconstruct single image
+vae-normalizer reconstruct -o /path/to/original.png -d /path/to/diff.png -o output.png
+```
+
+The diff encoding uses: `diff = VAE - Original + 128` (offset to handle signed values).
+Reconstruction: `VAE = Original + Diff - 128`.
+
 ## Output Structure
 
 ```
@@ -101,6 +119,8 @@ output/
 
 ## Dataset Structure
 
+### Standard Format
+
 Expected input:
 ```
 dataset/
@@ -115,6 +135,23 @@ dataset/
 ```
 
 Image files are paired by filename stem (e.g., `Original/foo.png` pairs with `VAE/foo.png`).
+
+### Compressed Diff Format
+
+After running `compress`, the dataset uses diff encoding:
+```
+compressed/
+├── Original/
+│   ├── image001.png
+│   ├── image002.png
+│   └── ...
+└── Diff/
+    ├── image001.png  # Encodes (VAE - Original + 128)
+    ├── image002.png
+    └── ...
+```
+
+Diff images compress well (typically ~50% smaller than VAE originals) because most pixels are near 128 (gray) when VAE and original are similar.
 
 ## Formal Verification
 
@@ -131,6 +168,8 @@ isabelle build -d . -b VAEDataset_Splits
 ```
 
 ## Julia Integration
+
+### Standard Dataset
 
 ```julia
 include("julia_utils.jl")
@@ -150,6 +189,27 @@ loader = DataLoader(dataset, batch_size=32, shuffle=true)
 for (x, y) in loader
     # x: batch of images
     # y: labels (0=original, 1=VAE)
+end
+```
+
+### Compressed Dataset
+
+```julia
+include("julia_utils.jl")
+using .VAEDatasetUtils
+
+# Load compressed dataset (VAE images reconstructed on-the-fly)
+dataset = CompressedVAEDataset(
+    "output/splits/random_train.txt",
+    "/path/to/compressed/Original",
+    "/path/to/compressed/Diff"
+)
+
+# Same API as standard dataset
+loader = DataLoader(dataset, batch_size=32, shuffle=true)
+
+for (x, y) in loader
+    # VAE images are reconstructed automatically from diffs
 end
 ```
 

@@ -28,6 +28,7 @@ using Statistics
 
 export VAEDetectorDataset, load_split, verify_checksum, compute_shake256
 export load_manifest, get_image_pair, DataLoader, accuracy, train_epoch!
+export CompressedVAEDataset, reconstruct_vae_from_diff
 
 # SHAKE256 with d=256 (32 bytes output)
 # Julia's SHA library uses extendable output functions
@@ -147,15 +148,116 @@ function Base.getindex(d::VAEDetectorDataset, i::Int)
     return (orig_img, vae_img)
 end
 
+#=
+Compressed Dataset Support
+==========================
+
+For datasets stored in compressed diff format (Original/ + Diff/ instead of Original/ + VAE/).
+The diff encoding is: diff = VAE - Original + 128 (offset to handle signed values)
+Reconstruction is: VAE = Original + Diff - 128
+=#
+
+"""
+Reconstruct a VAE image from original and diff images.
+The diff encoding uses an offset of 128 to handle signed differences:
+- diff = VAE - Original + 128 (during compression)
+- VAE = Original + Diff - 128 (during reconstruction)
+
+Arguments:
+- original: Original image as Float32 array (values in [0, 1])
+- diff: Diff image as Float32 array (values in [0, 1])
+
+Returns:
+- Reconstructed VAE image as Float32 array (values clamped to [0, 1])
+"""
+function reconstruct_vae_from_diff(original::Array{Float32}, diff::Array{Float32})::Array{Float32}
+    # Convert from normalized [0,1] to [0,255] range for arithmetic
+    orig_255 = original .* 255.0f0
+    diff_255 = diff .* 255.0f0
+
+    # Reconstruct: VAE = Original + Diff - 128
+    vae_255 = orig_255 .+ diff_255 .- 128.0f0
+
+    # Clamp and normalize back to [0, 1]
+    return clamp.(vae_255 ./ 255.0f0, 0.0f0, 1.0f0)
+end
+
+"""
+Dataset for VAE artifact detection using compressed diff format.
+This dataset reads from Original/ and Diff/ directories and reconstructs
+VAE images on-the-fly, reducing storage by ~50%.
+
+Fields:
+- ids: Vector of image IDs
+- original_dir: Path to Original/ directory
+- diff_dir: Path to Diff/ directory
+- transform: Optional transform function
+"""
+struct CompressedVAEDataset
+    ids::Vector{String}
+    original_dir::String
+    diff_dir::String
+    transform::Function
+end
+
+function CompressedVAEDataset(
+    split_path::AbstractString,
+    original_dir::AbstractString,
+    diff_dir::AbstractString;
+    transform::Function = identity
+)
+    ids = load_split(split_path)
+    return CompressedVAEDataset(ids, original_dir, diff_dir, transform)
+end
+
+Base.length(d::CompressedVAEDataset) = length(d.ids)
+
+function Base.getindex(d::CompressedVAEDataset, i::Int)
+    id = d.ids[i]
+
+    # Find the original image (try common extensions)
+    orig_path = nothing
+    diff_path = joinpath(d.diff_dir, "$(id).png")
+
+    for ext in ["png", "jpg", "jpeg", "webp"]
+        candidate = joinpath(d.original_dir, "$(id).$(ext)")
+        if isfile(candidate)
+            orig_path = candidate
+            break
+        end
+    end
+
+    if orig_path === nothing
+        error("Original image not found for ID: $id")
+    end
+    if !isfile(diff_path)
+        error("Diff image not found for ID: $id")
+    end
+
+    # Load images and convert to Float32 arrays
+    orig_img = Float32.(channelview(load(orig_path)))
+    diff_img = Float32.(channelview(load(diff_path)))
+
+    # Reconstruct VAE image from original + diff
+    vae_img = reconstruct_vae_from_diff(orig_img, diff_img)
+
+    # Apply transform
+    orig_img = d.transform(orig_img)
+    vae_img = d.transform(vae_img)
+
+    # Return (original, vae) pair
+    return (orig_img, vae_img)
+end
+
 # Simple data loader for batching
-struct DataLoader
-    dataset::VAEDetectorDataset
+struct DataLoader{T}
+    dataset::T
     batch_size::Int
     shuffle::Bool
     indices::Vector{Int}
 end
 
-function DataLoader(dataset::VAEDetectorDataset; batch_size::Int=32, shuffle::Bool=true)
+function DataLoader(dataset; batch_size::Int=32, shuffle::Bool=true)
     indices = collect(1:length(dataset))
     if shuffle
         shuffle!(indices)
@@ -292,6 +394,28 @@ loss_fn = Flux.binarycrossentropy
 
 for epoch in 1:10
     loss = train_epoch!(model, opt, train_loader, loss_fn)
+    println("Epoch $epoch: loss = $loss")
+end
+
+
+# ============================================
+# Example usage with COMPRESSED diff format:
+# ============================================
+
+# Load compressed dataset (Original/ + Diff/ directories)
+# VAE images are reconstructed on-the-fly from diffs
+compressed_data = CompressedVAEDataset(
+    "splits/random_train.txt",
+    "/path/to/compressed-dataset/Original",
+    "/path/to/compressed-dataset/Diff"
+)
+
+# Create data loader (same API as regular dataset)
+compressed_loader = DataLoader(compressed_data, batch_size=32, shuffle=true)
+
+# Training works identically - VAE images are reconstructed automatically
+for epoch in 1:10
+    loss = train_epoch!(model, opt, compressed_loader, loss_fn)
     println("Epoch $epoch: loss = $loss")
 end
 =#

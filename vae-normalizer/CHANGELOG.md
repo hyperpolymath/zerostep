@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - RSR (Rhodium Standard Repository) compliance
 - Full documentation suite
+- **Diff-based compression**: Store VAE images as diffs to reduce dataset size by ~50%
+  - New `compress` subcommand to convert VAE images to diffs
+  - New `decompress` subcommand to reconstruct full VAE directory
+  - New `reconstruct` subcommand to reconstruct single VAE image
+  - Julia `CompressedVAEDataset` for on-the-fly VAE reconstruction
+  - Diff encoding: `diff = VAE - Original + 128` (offset for signed values)
 
 ## [1.0.0] - 2024-01-01
 
