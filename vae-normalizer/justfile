@@ -775,6 +775,61 @@ compare-splits:
         results = compare_splits("{{output}}/manifest.csv", "{{output}}/splits", "{{output}}/splits"); \
         for (k, v) in results; println("$k: ", v); end'
 
+# Install Julia project dependencies
+[group('julia')]
+julia-setup:
+    julia --project=. -e 'using Pkg; Pkg.instantiate()'
+
+# Train contrastive model for VAE artifact detection
+[group('julia')]
+train dataset_path output_path="output" epochs="50" batch_size="32":
+    @echo "Training VAE artifact detection model..."
+    julia --project=. contrastive_model.jl train \
+        --dataset {{dataset_path}} \
+        --output {{output_path}} \
+        --epochs {{epochs}} \
+        --batch-size {{batch_size}} \
+        --loss supervised
+
+# Train with compressed diff dataset
+[group('julia')]
+train-compressed dataset_path output_path="output" epochs="50":
+    @echo "Training on compressed dataset..."
+    julia --project=. contrastive_model.jl train \
+        --dataset {{dataset_path}} \
+        --output {{output_path}} \
+        --epochs {{epochs}} \
+        --compressed
+
+# Evaluate trained model
+[group('julia')]
+evaluate model_path dataset_path:
+    julia --project=. contrastive_model.jl evaluate \
+        --model {{model_path}} \
+        --dataset {{dataset_path}}
+
+# Extract embeddings for visualization
+[group('julia')]
+embed model_path dataset_path output_path="output":
+    julia --project=. contrastive_model.jl embed \
+        --model {{model_path}} \
+        --dataset {{dataset_path}} \
+        --output {{output_path}}
+
+# Quick training test with small epochs
+[group('julia')]
+train-quick dataset_path:
+    @echo "Quick training test (5 epochs)..."
+    just train {{dataset_path}} output 5 16
+
+# Full training pipeline: normalize -> train -> evaluate
+[group('julia')]
+train-full dataset_path output_path="output":
+    @echo "Running full training pipeline..."
+    just run-normalize {{dataset_path}} {{output_path}}
+    just train {{dataset_path}} {{output_path}} 50 32
+    just evaluate {{output_path}}/vae_classifier.bson {{dataset_path}}
+
 # ============================================================================
 # ISABELLE
 # ============================================================================

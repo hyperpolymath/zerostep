@@ -19,6 +19,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - New `reconstruct` subcommand to reconstruct single VAE image
   - Julia `CompressedVAEDataset` for on-the-fly VAE reconstruction
   - Diff encoding: `diff = VAE - Original + 128` (offset for signed values)
+- **Contrastive learning model** for VAE artifact detection (`contrastive_model.jl`)
+  - CNN encoder with ResNet-style residual blocks (embed_dim=256)
+  - Projection head for contrastive learning (proj_dim=128)
+  - Multiple loss functions: NT-Xent, Supervised Contrastive, Triplet, Contrastive
+  - Two-phase training: contrastive pre-training + classifier fine-tuning
+  - Binary classifier for original vs VAE discrimination
+  - Embedding extraction for visualization (t-SNE, UMAP compatible)
+  - Evaluation metrics: accuracy, precision, recall, F1, confusion matrix
+  - GPU support via CUDA.jl (optional)
+  - Justfile recipes: `train`, `train-compressed`, `evaluate`, `embed`, `train-full`
 
 ## [1.0.0] - 2024-01-01
 
