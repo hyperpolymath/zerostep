@@ -1,0 +1,35 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: 2024 Joshua Jewell
+# SPDX-License-Identifier: MIT
+#
+# RSR Prepare-commit-msg Hook
+# Adds DCO sign-off to commit messages
+
+COMMIT_MSG_FILE=$1
+COMMIT_SOURCE=$2
+SHA1=$3
+
+# Skip if this is a merge, squash, or already has sign-off
+case "$COMMIT_SOURCE" in
+    merge|squash)
+        exit 0
+        ;;
+esac
+
+# Check if sign-off already exists
+if grep -q "^Signed-off-by:" "$COMMIT_MSG_FILE"; then
+    exit 0
+fi
+
+# Get user name and email from git config
+NAME=$(git config user.name)
+EMAIL=$(git config user.email)
+
+if [ -z "$NAME" ] || [ -z "$EMAIL" ]; then
+    echo "Warning: Cannot add sign-off without user.name and user.email configured"
+    exit 0
+fi
+
+# Add DCO sign-off
+echo "" >> "$COMMIT_MSG_FILE"
+echo "Signed-off-by: $NAME <$EMAIL>" >> "$COMMIT_MSG_FILE"

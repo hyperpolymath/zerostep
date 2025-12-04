@@ -1,0 +1,108 @@
+SPDX-License-Identifier: LicenseRef-Palimpsest-0.8
+
+PALIMPSEST LICENSE
+Version 0.8
+
+Copyright (c) 2024 Joshua Jewell
+
+================================================================================
+PREAMBLE
+================================================================================
+
+The Palimpsest License draws its name from ancient manuscripts where earlier
+texts were scraped away to make room for new writing, yet traces of the
+original remained visible beneath. Similarly, this license recognizes that
+all creative works build upon those that came before, and encourages
+transparent attribution of this layered provenance.
+
+This is not a replacement for traditional open source licenses (MIT, GPL, etc.)
+but a complementary ethical framework that encourages:
+
+1. Transparent attribution and provenance tracking
+2. Collaborative improvement over time
+3. Ethical use that benefits the commons
+4. Recognition of all contributors in the chain
+
+================================================================================
+TERMS AND CONDITIONS
+================================================================================
+
+1. ATTRIBUTION CHAIN
+
+   You are encouraged (but not legally required) to:
+
+   a) Maintain a clear record of all modifications and their authors
+   b) Preserve attribution to original authors and significant contributors
+   c) Document the provenance chain in a machine-readable format
+   d) Use SPDX headers and .well-known/provenance.json where applicable
+
+2. COLLABORATIVE IMPROVEMENT
+
+   The spirit of this license encourages:
+
+   a) Sharing improvements back to the community
+   b) Constructive collaboration over competitive forking
+   c) Mentorship of new contributors
+   d) Documentation of lessons learned
+
+3. ETHICAL USE
+
+   Users are encouraged to consider:
+
+   a) The impact of their use on the broader community
+   b) Whether their application aligns with the project's values
+   c) How their modifications might benefit others
+   d) The sustainability of the open source ecosystem
+
+4. TRANSPARENCY
+
+   In the spirit of the palimpsest, where layers remain visible:
+
+   a) Modification history should be preserved (e.g., via Git)
+   b) Significant changes should be documented in CHANGELOG
+   c) Decision-making processes should be transparent
+   d) Governance should be documented and accessible
+
+================================================================================
+LEGAL STATUS
+================================================================================
+
+This license is PHILOSOPHICALLY ENCOURAGED but NOT LEGALLY BINDING.
+
+The software is provided under a separate legal license (MIT, GPL, or other
+SPDX-identified license). The Palimpsest License describes ethical guidelines
+and community norms that complement but do not replace the legal license.
+
+Failure to follow Palimpsest principles does not constitute a license
+violation, but does represent a departure from the project's values.
+
+================================================================================
+SOLIDARITY ECONOMICS
+================================================================================
+
+This project operates under solidarity economics principles:
+
+- Contributions are valued beyond monetary compensation
+- Community benefit takes precedence over individual profit
+- Sustainable funding models are preferred over extractive ones
+- Attribution and recognition are forms of compensation
+
+See FUNDING.yml for ways to support sustainable development.
+
+================================================================================
+ACKNOWLEDGMENTS
+================================================================================
+
+The Palimpsest License was inspired by:
+
+- The Free Software Foundation's philosophy of software freedom
+- The Open Source Initiative's collaborative model
+- The Commons movement's emphasis on shared resources
+- The IndieWeb's principles of data ownership
+- The Contributor Covenant's community standards
+
+================================================================================
+VERSION HISTORY
+================================================================================
+
+0.8 (2024): Initial release - ethical framework established

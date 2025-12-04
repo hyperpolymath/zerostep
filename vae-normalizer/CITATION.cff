@@ -1,0 +1,47 @@
+# SPDX-FileCopyrightText: 2024 Joshua Jewell
+# SPDX-License-Identifier: CC0-1.0
+
+cff-version: 1.2.0
+title: VAE Dataset Normalizer
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Jonathan
+    family-names: Jewell
+    email: enquiries@joshuajewell.dev
+    orcid: 'https://orcid.org/0000-0000-0000-0000'
+repository-code: 'https://gitlab.com/hyperpolymath/zerostep'
+url: 'https://huggingface.co/datasets/joshuajewell/VAEDecodedImages-SDXL'
+abstract: >-
+  Normalize VAE-decoded image datasets for training AI
+  artifact detection models with formal verification
+  guarantees and Rhodium Standard Repository (RSR)
+  compliance.
+keywords:
+  - vae
+  - variational-autoencoder
+  - sdxl
+  - stable-diffusion
+  - ai-detection
+  - formal-verification
+  - isabelle
+  - rust
+  - julia
+license: MIT
+license-url: 'https://spdx.org/licenses/MIT.html'
+version: 1.0.0
+date-released: '2024-12-04'
+references:
+  - type: dataset
+    title: VAEDecodedImages-SDXL
+    authors:
+      - given-names: Jonathan
+        family-names: Jewell
+    repository: 'https://huggingface.co/datasets/joshuajewell/VAEDecodedImages-SDXL'
+  - type: dataset
+    title: nordjylland-news-image-captioning
+    authors:
+      - name: Alexandra Institute
+    repository: 'https://huggingface.co/datasets/alexandrainst/nordjylland-news-image-captioning'
