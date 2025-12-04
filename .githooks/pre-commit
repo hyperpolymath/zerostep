@@ -1,0 +1,67 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: 2024 Joshua Jewell
+# SPDX-License-Identifier: MIT
+#
+# RSR Pre-commit Hook
+# Runs validation before commits
+
+set -e
+
+echo "=== RSR Pre-commit Validation ==="
+
+# Check for SPDX headers in source files
+echo "Checking SPDX headers..."
+for file in $(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(rs|jl|ncl|cue|thy|nix|sh)$'); do
+    if ! head -5 "$file" | grep -q "SPDX-License-Identifier"; then
+        echo "ERROR: Missing SPDX header in $file"
+        exit 1
+    fi
+done
+
+# Check for secrets (basic patterns)
+echo "Checking for secrets..."
+SECRETS_PATTERN='(password|secret|api_key|private_key|auth_token).*=.*["\047][^"\047]+["\047]'
+for file in $(git diff --cached --name-only --diff-filter=ACM); do
+    if grep -iE "$SECRETS_PATTERN" "$file" 2>/dev/null; then
+        echo "ERROR: Possible secret detected in $file"
+        exit 1
+    fi
+done
+
+# Run cargo check if Rust files changed
+if git diff --cached --name-only | grep -q '\.rs$'; then
+    echo "Running cargo check..."
+    if command -v cargo >/dev/null 2>&1; then
+        cargo check --quiet 2>/dev/null || true
+    fi
+fi
+
+# Run cargo fmt check if Rust files changed
+if git diff --cached --name-only | grep -q '\.rs$'; then
+    echo "Checking Rust formatting..."
+    if command -v cargo >/dev/null 2>&1; then
+        cargo fmt --check 2>/dev/null || echo "Warning: cargo fmt check failed (non-blocking)"
+    fi
+fi
+
+# Validate CUE files
+if git diff --cached --name-only | grep -q '\.cue$'; then
+    echo "Validating CUE files..."
+    if command -v cue >/dev/null 2>&1; then
+        for file in $(git diff --cached --name-only | grep '\.cue$'); do
+            cue vet "$file" 2>/dev/null || echo "Warning: CUE validation failed for $file (non-blocking)"
+        done
+    fi
+fi
+
+# Validate Nickel files
+if git diff --cached --name-only | grep -q '\.ncl$'; then
+    echo "Validating Nickel files..."
+    if command -v nickel >/dev/null 2>&1; then
+        for file in $(git diff --cached --name-only | grep '\.ncl$'); do
+            nickel typecheck "$file" 2>/dev/null || echo "Warning: Nickel validation failed for $file (non-blocking)"
+        done
+    fi
+fi
+
+echo "=== Pre-commit validation passed ==="

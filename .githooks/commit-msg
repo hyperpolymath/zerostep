@@ -1,0 +1,44 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: 2024 Joshua Jewell
+# SPDX-License-Identifier: MIT
+#
+# RSR Commit-msg Hook
+# Validates commit message format
+
+COMMIT_MSG_FILE=$1
+
+# Read first line
+FIRST_LINE=$(head -1 "$COMMIT_MSG_FILE")
+
+# Check message length (should be under 72 chars for subject)
+if [ ${#FIRST_LINE} -gt 72 ]; then
+    echo "ERROR: Commit subject line exceeds 72 characters"
+    exit 1
+fi
+
+# Check for empty message
+if [ -z "$FIRST_LINE" ]; then
+    echo "ERROR: Empty commit message"
+    exit 1
+fi
+
+# Check for conventional commit prefix (optional but encouraged)
+# Types: feat, fix, docs, style, refactor, test, chore, ci, perf, build
+CONVENTIONAL_PATTERN='^(feat|fix|docs|style|refactor|test|chore|ci|perf|build)(\(.+\))?: .+'
+if ! echo "$FIRST_LINE" | grep -qE "$CONVENTIONAL_PATTERN"; then
+    echo "Note: Consider using conventional commits format:"
+    echo "  feat: add new feature"
+    echo "  fix: fix bug"
+    echo "  docs: update documentation"
+    echo "  (This is a suggestion, not a requirement)"
+fi
+
+# Verify DCO sign-off exists
+if ! grep -q "^Signed-off-by:" "$COMMIT_MSG_FILE"; then
+    echo "ERROR: Missing DCO sign-off"
+    echo "Add: Signed-off-by: Your Name <your@email.com>"
+    echo "Or use: git commit -s"
+    exit 1
+fi
+
+exit 0
