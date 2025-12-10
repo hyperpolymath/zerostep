@@ -1,0 +1,36 @@
+= ZeroStep - Citation Guide
+:toc:
+
+== BibTeX
+
+[source,bibtex]
+----
+@software{zerostep_2025,
+  author = {Polymath, Hyper},
+  title = {ZeroStep},
+  year = {2025},
+  url = {https://github.com/hyperpolymath/ZeroStep},
+  license = {AGPL-3.0-or-later}
+}
+----
+
+== Harvard Style
+
+Polymath, H. (2025) _ZeroStep_ [Computer software]. Available at: https://github.com/hyperpolymath/ZeroStep
+
+== OSCOLA
+
+Hyper Polymath, 'ZeroStep' (2025) <https://github.com/hyperpolymath/ZeroStep>
+
+== MLA
+
+Polymath, Hyper. "ZeroStep." 2025, github.com/hyperpolymath/ZeroStep.
+
+== APA 7
+
+Polymath, H. (2025). _ZeroStep_ [Computer software]. GitHub. https://github.com/hyperpolymath/ZeroStep
+
+== See Also
+
+* link:../CITATION.cff[CITATION.cff]
+* link:../codemeta.json[codemeta.json]
