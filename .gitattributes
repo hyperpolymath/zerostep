@@ -1,81 +1,54 @@
-# SPDX-FileCopyrightText: 2024 Joshua Jewell
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# RSR-compliant .gitattributes
 
-# Auto detect text files and perform LF normalization
-* text=auto
+* text=auto eol=lf
 
-# Rust sources
-*.rs text diff=rust
-Cargo.toml text
-Cargo.lock text -diff
+# Source
+*.rs    text eol=lf diff=rust
+*.ex    text eol=lf diff=elixir
+*.exs   text eol=lf diff=elixir
+*.jl    text eol=lf
+*.res   text eol=lf
+*.resi  text eol=lf
+*.ada   text eol=lf diff=ada
+*.adb   text eol=lf diff=ada
+*.ads   text eol=lf diff=ada
+*.hs    text eol=lf
+*.chpl  text eol=lf
+*.scm   text eol=lf
+*.ncl   text eol=lf
+*.nix   text eol=lf
 
-# Shell scripts
-*.sh text eol=lf
+# Docs
+*.md    text eol=lf diff=markdown
+*.adoc  text eol=lf
+*.txt   text eol=lf
 
-# Configuration
-*.toml text
-*.yaml text
-*.yml text
-*.json text
-*.cue text
-*.ncl text
-justfile text
-Makefile text
+# Data
+*.json  text eol=lf
+*.yaml  text eol=lf
+*.yml   text eol=lf
+*.toml  text eol=lf
 
-# Documentation
-*.md text diff=markdown
-*.adoc text
-*.txt text
-*.rst text
+# Config
+.gitignore     text eol=lf
+.gitattributes text eol=lf
+justfile       text eol=lf
+Makefile       text eol=lf
+Containerfile  text eol=lf
 
-# Isabelle theory files
-*.thy text
+# Scripts
+*.sh   text eol=lf
 
-# Julia
-*.jl text
+# Binary
+*.png   binary
+*.jpg   binary
+*.gif   binary
+*.pdf   binary
+*.woff2 binary
+*.zip   binary
+*.gz    binary
 
-# Nix
-*.nix text
-
-# Container
-Containerfile text
-Dockerfile text
-
-# Git
-.gitignore text
-.gitattributes text
-
-# Binary files
-*.png binary
-*.jpg binary
-*.jpeg binary
-*.gif binary
-*.ico binary
-*.webp binary
-*.pdf binary
-
-# Archives
-*.zip binary
-*.tar binary
-*.gz binary
-*.xz binary
-*.bz2 binary
-
-# Executables
-*.exe binary
-*.dll binary
-*.so binary
-*.dylib binary
-
-# Export-ignore (not included in archives)
-.git* export-ignore
-.github export-ignore
-.gitlab export-ignore
-.well-known export-ignore
-tests/ export-ignore
-target/ export-ignore
-
-# Linguist overrides
-*.thy linguist-language=Isabelle
-*.ncl linguist-language=Nickel
-*.cue linguist-language=CUE
+# Lock files
+Cargo.lock  text eol=lf -diff
+flake.lock  text eol=lf -diff
