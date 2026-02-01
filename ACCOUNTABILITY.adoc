@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2024 Joshua Jewell
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: PMPL-1.0-or-later
 = Mutually Assured Accountability (MAA) Framework
 :toc:
 :toclevels: 3

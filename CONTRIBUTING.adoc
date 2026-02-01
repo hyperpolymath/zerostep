@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2024 Joshua Jewell
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: PMPL-1.0-or-later
 = Contributing to VAE Dataset Normalizer
 :toc:
 :toclevels: 3
@@ -129,7 +129,7 @@ Every source file must include SPDX headers:
 [source,rust]
 ----
 // SPDX-FileCopyrightText: 2024 Your Name
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: PMPL-1.0-or-later
 ----
 
 === Commit Messages

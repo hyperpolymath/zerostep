@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2024 Joshua Jewell
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: PMPL-1.0-or-later
 = VAE Dataset Normalizer Governance
 :toc:
 :toclevels: 2

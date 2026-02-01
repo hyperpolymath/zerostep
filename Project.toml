@@ -1,5 +1,5 @@
 # SPDX-FileCopyrightText: 2024 Joshua Jewell
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: PMPL-1.0-or-later
 
 name = "VAENormalizer"
 uuid = "a1b2c3d4-5678-9abc-def0-123456789abc"

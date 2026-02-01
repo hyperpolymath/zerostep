@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2024 Joshua Jewell
-// SPDX-License-Identifier: PMPL-1.0
+// SPDX-License-Identifier: PMPL-1.0-or-later
 = VAE Dataset Normalizer
 
-image:https://img.shields.io/badge/license-Palimpsest--MPL--1.0-purple.svg[Palimpsest-MPL-1.0,link="https://github.com/hyperpolymath/palimpsest-license"]
+image:https://img.shields.io/badge/License-PMPL--1.0-blue.svg[License: PMPL-1.0,link="https://github.com/hyperpolymath/palimpsest-license"]
 :toc: macro
 :toclevels: 3
 :icons: font
