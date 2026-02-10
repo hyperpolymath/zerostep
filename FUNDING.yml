@@ -17,8 +17,7 @@ lfx_crowdfunding:
 polar:
 
 # Custom funding links
-custom:
-  - https://huggingface.co/datasets/joshuajewell/VAEDecodedImages-SDXL
+
 
 # Solidarity Economics Framework
 #
