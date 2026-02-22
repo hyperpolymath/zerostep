@@ -345,3 +345,8 @@ See link:CONTRIBUTING.adoc[CONTRIBUTING.adoc] for contribution guidelines.
 == Security
 
 See link:SECURITY.md[SECURITY.md] for security policy and vulnerability reporting.
+
+
+== Architecture
+
+See link:TOPOLOGY.md[TOPOLOGY.md] for a visual architecture map and completion dashboard.
