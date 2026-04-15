@@ -14,6 +14,8 @@
 # ============================================================================
 
 # Paths
+import? "contractile.just"
+
 dataset := env_var_or_default("DATASET_PATH", "~/vae-dataset")
 output := env_var_or_default("OUTPUT_PATH", "~/vae-normalized")
 target_dir := "target"
