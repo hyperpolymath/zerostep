@@ -38,7 +38,7 @@ thiserror = "1.0"
 # Parallel processing
 rayon = "1.10"
 # Progress indication
-indicatif = "0.17"
+indicatif = "0.18"
 # Image processing for diff compression
 image = "0.25"
 
