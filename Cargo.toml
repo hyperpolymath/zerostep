@@ -21,7 +21,7 @@ hex = "0.4"
 # SHAKE256 implementation
 tiny-keccak = { version = "2.0", features = ["shake"] }
 # CLI argument parsing
-clap = { version = "4.4", features = ["derive"] }
+clap = { version = "4.5", features = ["derive"] }
 # CSV handling
 csv = "1.3"
 # Serialization
@@ -36,7 +36,7 @@ walkdir = "2.5"
 anyhow = "1.0"
 thiserror = "1.0"
 # Parallel processing
-rayon = "1.10"
+rayon = "1.12"
 # Progress indication
 indicatif = "0.17"
 # Image processing for diff compression
