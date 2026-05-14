@@ -77,7 +77,11 @@ pub struct ImagePair {
 
 impl ImagePair {
     /// Construct a new `ImagePair` from the given paths and original file size.
-    pub fn new(original: impl Into<String>, decoded: impl Into<String>, original_size: u64) -> Self {
+    pub fn new(
+        original: impl Into<String>,
+        decoded: impl Into<String>,
+        original_size: u64,
+    ) -> Self {
         Self {
             original: original.into(),
             decoded: decoded.into(),
@@ -138,7 +142,14 @@ pub fn assign_split_by_index(index: usize, total: usize) -> Split {
 ///
 /// The partition is deterministic given a pre-ordered (e.g. shuffled) slice.
 /// Returns `(train, test, val, calibration)`.
-pub fn partition_pairs(pairs: &[ImagePair]) -> (Vec<&ImagePair>, Vec<&ImagePair>, Vec<&ImagePair>, Vec<&ImagePair>) {
+pub fn partition_pairs(
+    pairs: &[ImagePair],
+) -> (
+    Vec<&ImagePair>,
+    Vec<&ImagePair>,
+    Vec<&ImagePair>,
+    Vec<&ImagePair>,
+) {
     let total = pairs.len();
     let mut train = Vec::new();
     let mut test = Vec::new();
