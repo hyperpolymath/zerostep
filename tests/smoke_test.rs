@@ -75,7 +75,11 @@ fn split_all_contains_four_unique_variants() {
     // Verify there are no duplicates by comparing hash-equality.
     use std::collections::HashSet;
     let set: HashSet<_> = all.iter().collect();
-    assert_eq!(set.len(), 4, "Split::all() must not contain duplicate variants");
+    assert_eq!(
+        set.len(),
+        4,
+        "Split::all() must not contain duplicate variants"
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -213,7 +217,10 @@ fn assign_split_by_index_single_item_documented_behaviour() {
     let split = assign_split_by_index(0, 1);
     // Must be a valid variant (no panic or undefined behaviour).
     assert!(
-        matches!(split, Split::Train | Split::Test | Split::Val | Split::Calibration),
+        matches!(
+            split,
+            Split::Train | Split::Test | Split::Val | Split::Calibration
+        ),
         "must return a valid Split for single-item dataset"
     );
 }
@@ -236,7 +243,13 @@ fn partition_pairs_empty_slice_produces_empty_vecs() {
 #[test]
 fn partition_pairs_total_count_equals_input_length() {
     let pairs: Vec<ImagePair> = (0..200)
-        .map(|i| ImagePair::new(format!("orig/{}.png", i), format!("dec/{}.png", i), i as u64 * 1024))
+        .map(|i| {
+            ImagePair::new(
+                format!("orig/{}.png", i),
+                format!("dec/{}.png", i),
+                i as u64 * 1024,
+            )
+        })
         .collect();
 
     let (train, test, val, calibration) = partition_pairs(&pairs);
