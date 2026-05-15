@@ -34,7 +34,7 @@ rand_chacha = "0.9"
 walkdir = "2.5"
 # Error handling
 anyhow = "1.0"
-thiserror = "1.0"
+thiserror = "2.0"
 # Parallel processing
 rayon = "1.12"
 # Progress indication
