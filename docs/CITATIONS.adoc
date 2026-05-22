@@ -10,7 +10,7 @@
   title = {ZeroStep},
   year = {2025},
   url = {https://github.com/hyperpolymath/ZeroStep},
-  license = {PMPL-1.0-or-later}
+  license = {MPL-2.0}
 }
 ----
 

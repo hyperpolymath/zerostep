@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PMPL-1.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 // SPDX-FileCopyrightText: 2024-2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 
 = VAE Dataset Normalizer — Show Me The Receipts
@@ -194,7 +194,7 @@ If the RNG implementation has a bug, or if the system experiences a cosmic ray b
 | **Hyperpolymath Language Policy** | Rust (CLI), Julia (training), Isabelle (proofs), no TypeScript/Python/Go
 | Compliant; CUE and Nickel for config
 
-| **PMPL-1.0-or-later License** | Primary license; all Rust files carry header
+| **MPL-2.0 License** | Primary license; all Rust files carry header
 | Declared at repo root and in every .rs file
 
 | **Formal Verification** | Isabelle/HOL proofs guarantee split correctness (disjointness, exhaustiveness, ratio)
