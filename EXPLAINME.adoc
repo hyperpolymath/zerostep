@@ -19,25 +19,32 @@ ____
 The normalizer computes a SHAKE256 digest for every image file in the dataset:
 
 1. **Digest Computation**: For each image file, compute SHAKE256 hash:
-   ```
-   hash = SHAKE256(file_bytes, length=256 bits)
-   hex_string = hex_encode(hash)
-   ```
-   Code: `src/main.rs` function `shake256_d256()` (lines 48-54) uses the `tiny-keccak` crate (FIPS 202 compliant).
++
+----
+hash = SHAKE256(file_bytes, length=256 bits)
+hex_string = hex_encode(hash)
+----
++
+Code: `src/main.rs` function `shake256_d256()` (lines 48-54) uses the `tiny-keccak` crate (FIPS 202 compliant).
 
 2. **Manifest Creation**: All hashes written to a manifest file (`output/manifest.csv`):
-   ```csv
-   filename,sha256,size_bytes,category
-   image001.png,a1b2c3d4e5...,15234,Original
-   image001.png,f6g7h8i9j0...,14876,VAE
-   image002.png,k1l2m3n4o5...,18912,Original
-   ```
++
+[source,csv]
+----
+filename,sha256,size_bytes,category
+image001.png,a1b2c3d4e5...,15234,Original
+image001.png,f6g7h8i9j0...,14876,VAE
+image002.png,k1l2m3n4o5...,18912,Original
+----
 
 3. **Verification**: Users can verify all files post-transfer:
-   ```bash
-   vae-normalizer verify --checksums -d /path/to/output
-   ```
-   This re-computes hashes and compares against manifest. Any mismatch (bit flip, corruption, tampering) is detected and reported.
++
+[source,bash]
+----
+vae-normalizer verify --checksums -d /path/to/output
+----
++
+This re-computes hashes and compares against manifest. Any mismatch (bit flip, corruption, tampering) is detected and reported.
 
 4. **Formal Proof** (Isabelle/HOL): The theorem `VAEDataset_Splits.thy` (lines 120-140) proves that if all hashes match, the bijection property holds: every Original image has exactly one matching VAE image.
 
@@ -77,15 +84,18 @@ ____
 The normalizer partitions images deterministically into 4 disjoint subsets:
 
 1. **Random Split Algorithm** (default):
-   ```rust
-   let mut rng = ChaCha8Rng::seed_from_u64(seed);  // Fixed seed for reproducibility
-   let n = images.len();
-   let train_end = (n * 70) / 100;       // 70% = indices 0..train_end
-   let test_end = train_end + (n * 15) / 100;     // 15% = indices train_end..test_end
-   let val_end = test_end + (n * 10) / 100;       // 10% = indices test_end..val_end
-   // Remaining: Calibration (5%)
-   ```
-   Code: `src/main.rs` lines 100-150, function `split_random()`.
++
+[source,rust]
+----
+let mut rng = ChaCha8Rng::seed_from_u64(seed);  // Fixed seed for reproducibility
+let n = images.len();
+let train_end = (n * 70) / 100;       // 70% = indices 0..train_end
+let test_end = train_end + (n * 15) / 100;     // 15% = indices train_end..test_end
+let val_end = test_end + (n * 10) / 100;       // 10% = indices test_end..val_end
+// Remaining: Calibration (5%)
+----
++
+Code: `src/main.rs` lines 100-150, function `split_random()`.
 
 2. **Stratified Split Option** (optional):
    - Groups images by file size bucket (e.g., "small" = 0-10KB, "medium" = 10-50KB, etc.)
@@ -94,13 +104,14 @@ The normalizer partitions images deterministically into 4 disjoint subsets:
    Code: `src/main.rs` lines 160-200, function `split_stratified()`.
 
 3. **Output Files**: Four text files, one per split:
-   ```
-   output/splits/
-   ├── random_train.txt          # 70% of filenames
-   ├── random_test.txt           # 15%
-   ├── random_val.txt            # 10%
-   └── random_calibration.txt    # 5%
-   ```
++
+----
+output/splits/
+├── random_train.txt          # 70% of filenames
+├── random_test.txt           # 15%
+├── random_val.txt            # 10%
+└── random_calibration.txt    # 5%
+----
 
 4. **Formal Verification** (Isabelle/HOL):
    The theorem `VAEDataset_Splits.thy` (lines 1-50) proves three properties:
@@ -109,9 +120,11 @@ The normalizer partitions images deterministically into 4 disjoint subsets:
    - **Ratio Correctness**: |Train| / |Dataset| ≈ 0.70 (within 1% tolerance)
 
    To verify:
-   ```bash
-   isabelle build -d . -b VAEDataset_Splits
-   ```
++
+[source,bash]
+----
+isabelle build -d . -b VAEDataset_Splits
+----
 
 **Code Evidence:**
 - Random split: `src/main.rs` lines 100-150
@@ -217,82 +230,100 @@ If the RNG implementation has a bug, or if the system experiences a cosmic ray b
 === Test Checksum Computation
 
 1. Normalize a small test dataset:
-   ```bash
-   vae-normalizer normalize -d examples/test-dataset -o output
-   ```
++
+[source,bash]
+----
+vae-normalizer normalize -d examples/test-dataset -o output
+----
 
 2. Inspect manifest:
-   ```bash
-   cat output/manifest.csv
-   # Observe SHAKE256 hashes (64 hex characters, 256 bits)
-   ```
++
+[source,bash]
+----
+cat output/manifest.csv
+# Observe SHAKE256 hashes (64 hex characters, 256 bits)
+----
 
 3. Corrupt a file and verify detection:
-   ```bash
-   # Flip a bit in one image
-   xxd -r -p - output/Original/image001.png <<< "FF" | head -c1 | dd of=output/Original/image001.png bs=1 count=1 conv=notrunc
++
+[source,bash]
+----
+# Flip a bit in one image
+xxd -r -p - output/Original/image001.png <<< "FF" | head -c1 | dd of=output/Original/image001.png bs=1 count=1 conv=notrunc
 
-   # Verify
-   vae-normalizer verify -o output --checksums
-   # Error: image001.png hash mismatch — detected corruption
-   ```
+# Verify
+vae-normalizer verify -o output --checksums
+# Error: image001.png hash mismatch — detected corruption
+----
 
 === Test Split Disjointness
 
 1. Run split:
-   ```bash
-   vae-normalizer normalize -d examples/test-dataset -o output
-   ```
++
+[source,bash]
+----
+vae-normalizer normalize -d examples/test-dataset -o output
+----
 
 2. Check for overlaps:
-   ```bash
-   # Count unique filenames across splits
-   cat output/splits/*.txt | sort | uniq | wc -l
-   # Should equal total file count
++
+[source,bash]
+----
+# Count unique filenames across splits
+cat output/splits/*.txt | sort | uniq | wc -l
+# Should equal total file count
 
-   # Check no duplicates within splits
-   cat output/splits/random_train.txt | sort | uniq -d
-   # Should be empty (no duplicates)
-   ```
+# Check no duplicates within splits
+cat output/splits/random_train.txt | sort | uniq -d
+# Should be empty (no duplicates)
+----
 
 3. Verify ratios:
-   ```bash
-   # Manual calculation
-   train=$(wc -l < output/splits/random_train.txt)
-   test=$(wc -l < output/splits/random_test.txt)
-   val=$(wc -l < output/splits/random_val.txt)
-   calib=$(wc -l < output/splits/random_calibration.txt)
-   total=$((train + test + val + calib))
++
+[source,bash]
+----
+# Manual calculation
+train=$(wc -l < output/splits/random_train.txt)
+test=$(wc -l < output/splits/random_test.txt)
+val=$(wc -l < output/splits/random_val.txt)
+calib=$(wc -l < output/splits/random_calibration.txt)
+total=$((train + test + val + calib))
 
-   echo "Train: $((100 * train / total))% (target 70%)"
-   echo "Test:  $((100 * test / total))% (target 15%)"
-   # Should be ±1% of targets
-   ```
+echo "Train: $((100 * train / total))% (target 70%)"
+echo "Test:  $((100 * test / total))% (target 15%)"
+# Should be ±1% of targets
+----
 
 === Run Formal Proofs
 
 1. Install Isabelle:
-   ```bash
-   # On Fedora/RHEL
-   dnf install isabelle
++
+[source,bash]
+----
+# On Fedora/RHEL
+dnf install isabelle
 
-   # Or build from source
-   git clone https://github.com/isabelle-prover/isabelle
-   cd isabelle && ./build
-   ```
+# Or build from source
+git clone https://github.com/isabelle-prover/isabelle
+cd isabelle && ./build
+----
 
 2. Verify theorems:
-   ```bash
-   cd /var/mnt/eclipse/repos/zerostep
-   isabelle build -d . -b VAEDataset_Splits
-   # Output: Build session VAEDataset_Splits — 100% complete
-   ```
++
+[source,bash]
+----
+cd /var/mnt/eclipse/repos/zerostep
+isabelle build -d . -b VAEDataset_Splits
+# Output: Build session VAEDataset_Splits — 100% complete
+----
 
 3. Inspect proof:
-   ```bash
-   cat theories/VAEDataset_Splits.thy | grep "theorem\|lemma" | head
-   # Lists all proven propositions
-   ```
++
+[source,bash]
+----
+cat theories/VAEDataset_Splits.thy | grep "theorem\|lemma" | head
+# Lists all proven propositions
+----
 
 ---
 
