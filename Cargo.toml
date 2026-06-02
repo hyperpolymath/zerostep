@@ -4,7 +4,7 @@ version = "1.0.0"
 edition = "2021"
 authors = ["Joshua Jewell"]
 description = "VAE dataset normalizer with formal verification and cryptographic integrity"
-license = "MIT"
+license = "MPL-2.0"
 repository = "https://huggingface.co/datasets/joshuajewell/VAEDecodedImages-SDXL"
 
 [lib]
