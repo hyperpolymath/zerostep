@@ -1,5 +1,5 @@
 #!/bin/bash -eu
-# SPDX-License-Identifier: PMPL-1.0
+# SPDX-License-Identifier: MPL-2.0
 cd $SRC/zerostep
 cargo +nightly fuzz build
 for target in $(cargo +nightly fuzz list); do
