@@ -1,5 +1,5 @@
 # SPDX-FileCopyrightText: 2024 Joshua Jewell
-# SPDX-License-Identifier: CC0-1.0
+# SPDX-License-Identifier: MPL-2.0
 
 cff-version: 1.2.0
 title: VAE Dataset Normalizer
