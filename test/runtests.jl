@@ -1,5 +1,5 @@
 # SPDX-FileCopyrightText: 2024 Joshua Jewell
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: MPL-2.0
 
 using Test
 using VAEContrastive # Assuming VAEContrastive is the module name of the package

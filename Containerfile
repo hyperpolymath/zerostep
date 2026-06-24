@@ -1,5 +1,5 @@
 # SPDX-FileCopyrightText: 2024 Joshua Jewell
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: MPL-2.0
 #
 # VAE Dataset Normalizer Container
 # RSR Compliant: Chainguard Wolfi base image
