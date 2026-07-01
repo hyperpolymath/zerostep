@@ -1,5 +1,5 @@
 # SPDX-FileCopyrightText: 2024 Joshua Jewell
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: MPL-2.0
 
 #=
 VAEDatasetUtils Module: VAE Dataset Utilities for Julia/Flux

@@ -1,5 +1,5 @@
 <!-- SPDX-FileCopyrightText: 2024 Joshua Jewell -->
-<!-- SPDX-License-Identifier: MIT -->
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
 
 # Reversibility Policy
 

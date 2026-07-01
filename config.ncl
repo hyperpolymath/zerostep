@@ -1,5 +1,5 @@
 # SPDX-FileCopyrightText: 2024 Joshua Jewell
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: MPL-2.0
 #
 # VAEDecodedImages-SDXL Configuration Schema
 # Nickel configuration for dataset normalization
