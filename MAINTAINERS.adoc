@@ -1,0 +1,73 @@
+== Maintainers
+
+This file lists the maintainers of the VAE Dataset Normalizer project.
+
+=== Current Maintainers
+
+==== BDFL (Benevolent Dictator For Life)
+
+[width="100%",cols="22%,21%,25%,32%",options="header",]
+|===
+|Name |Role |Since |Contact
+|Joshua Jewell |BDFL, Lead Maintainer |2024-01-01 |Via repository issues
+|===
+
+==== Core Maintainers
+
+[cols=",,,",options="header",]
+|===
+|Name |Role |Since |Focus Area
+|Joshua Jewell |Lead |2024-01-01 |All areas
+|===
+
+==== Expert Contributors
+
+[cols=",,,",options="header",]
+|===
+|Name |Role |Since |Focus Area
+|(Open for contributions) | | |
+|===
+
+=== Becoming a Maintainer
+
+See CONTRIBUTING.adoc for the Tri-Perimeter Contribution Framework
+(TPCF).
+
+==== Requirements
+
+[arabic]
+. *Sustained contribution*: 6+ months of active involvement
+. *Technical competence*: Demonstrated understanding of codebase
+. *Community trust*: Positive interactions, Code of Conduct adherence
+. *Security awareness*: Understanding of security practices
+. *Availability*: Commitment to reasonable response times
+
+==== Process
+
+[arabic]
+. Nomination by existing maintainer
+. Discussion among current maintainers
+. Vote (requires unanimous approval)
+. Onboarding and access provisioning
+
+=== Emeritus Maintainers
+
+Former maintainers who have stepped down:
+
+[cols=",,,",options="header",]
+|===
+|Name |Role |Period |Reason
+|(None yet) | | |
+|===
+
+=== Contact
+
+* *General*: Open an issue on the repository
+* *Security*: See SECURITY.md
+* *Governance*: See GOVERNANCE.adoc
+
+=== Acknowledgments
+
+We thank all contributors, past and present, for their work on this
+project. See the commit history and release notes for full contributor
+recognition.
