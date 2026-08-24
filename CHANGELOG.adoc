@@ -1,102 +1,74 @@
-<!-- SPDX-FileCopyrightText: 2024 Joshua Jewell -->
-<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+== Changelog
 
-= Changelog
+All notable changes to `+zerostep+` will be documented in this file.
 
-All notable changes to this project will be documented in this file.
+This file is generated from conventional commits by the
+https://github.com/hyperpolymath/standards/blob/main/.github/workflows/changelog-reusable.yml[`+changelog-reusable.yml+`]
+workflow (`+hyperpolymath/standards#206+`). Adopt the workflow in this
+repo’s CI to keep this file in sync automatically — see
+https://github.com/hyperpolymath/standards/blob/main/templates/cliff.toml[`+templates/cliff.toml+`]
+for the canonical config.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format follows https://keepachangelog.com/en/1.1.0/[Keep a
+Changelog]; this project aims to follow
+https://semver.org/spec/v2.0.0.html[Semantic Versioning].
 
-== [Unreleased]
+=== [Unreleased]
 
-=== Added
-- RSR (Rhodium Standard Repository) compliance
-- Full documentation suite
-- **Diff-based compression**: Store VAE images as diffs to reduce dataset size by ~50%
-  - New `compress` subcommand to convert VAE images to diffs
-  - New `decompress` subcommand to reconstruct full VAE directory
-  - New `reconstruct` subcommand to reconstruct single VAE image
-  - Julia `CompressedVAEDataset` for on-the-fly VAE reconstruction
-  - Diff encoding: `diff = VAE - Original + 128` (offset for signed values)
-- **Contrastive learning model** for VAE artifact detection (`contrastive_model.jl`)
-  - CNN encoder with ResNet-style residual blocks (embed_dim=256)
-  - Projection head for contrastive learning (proj_dim=128)
-  - Multiple loss functions: NT-Xent, Supervised Contrastive, Triplet, Contrastive
-  - Two-phase training: contrastive pre-training + classifier fine-tuning
-  - Binary classifier for original vs VAE discrimination
-  - Embedding extraction for visualization (t-SNE, UMAP compatible)
-  - Evaluation metrics: accuracy, precision, recall, F1, confusion matrix
-  - GPU support via CUDA.jl (optional)
-  - Justfile recipes: `train`, `train-compressed`, `evaluate`, `embed`, `train-full`
+==== Added
 
-== [1.0.0] - 2024-01-01
+* feat(crg): add crg-grade and crg-badge justfile recipes
+* feat: add stapeln.toml layer-based container definitionfrom existing
+Containerfile to stapeln format.Chainguard base, security hardening,
+SBOM generation.-Authored-By: Claude Opus 4.6 (1M context)
+noreply@anthropic.com
+* feat: deploy UX Manifesto infrastructure
+* feat: add CLADE.a2ml — clade taxonomy declaration
+* feat(ci): enable Hypatia scanning
 
-=== Added
+==== Fixed
 
-==== Core Features
-- SHAKE256 (d=256) cryptographic checksums for all image files
-- Train/test/validation/calibration splits (70/15/10/5 ratio)
-- Both random and stratified split generation
-- Size-based stratification with configurable bins
+* fix(ci): bump a2ml/k9-validate-action pins to canonical (#32)
+* fix(ci): sync hypatia-scan.yml to canonical (#31)
+* fix(ci): build Hypatia escript from repo root (estate dogfood drift)
+* fix(ci): hypatia-scan workdir ($\{\{ env.HOME }} resolves empty) (#30)
+* fix(ci): bump erlef/setup-beam SHA for ubuntu24 runner support (#23)
+* fix(ci): repair YAML block-scalar in workflow-linter Check Permissions
+step (#26)
+* fix(ci): move secret-scanner Cargo.toml gate from job-level if: to
+step-level (#28)
+* fix(src/metadata.rs): remove unused std::fs::File import (#25)
+* fix(codeql): switch language matrix to '`actions`' (no JS/TS in repo)
+(#24)
+* fix(ci): Resolve workflow-linter self-matching and metadata issues
 
-==== Metadata & Configuration
-- CUE metadata generation with Dublin Core compliance
-- Nickel configuration schema
-- SPDX headers on all source files
+==== Changed
 
-==== Formal Verification
-- Isabelle/HOL proofs for split properties
-  - Disjointness (no overlap between splits)
-  - Exhaustiveness (all images assigned)
-  - Ratio correctness (within 1% tolerance)
-  - Original-VAE bijection preservation
-
-==== CLI
-- `normalize` subcommand for dataset processing
-- `verify` subcommand for output validation
-- `stats` subcommand for statistics display
-- `hash` subcommand for single-file checksums
-- Comprehensive help and examples
-
-==== Infrastructure
-- Nix flake for reproducible builds
-- Podman container with Chainguard Wolfi base
-- Justfile task runner
-- Julia utilities for Flux.jl training
+* refactor: migrate 6SCM → 6A2 (.scm → .a2ml format)
 
 ==== Documentation
-- README with usage examples
-- QUICKSTART guide
-- RSR compliance documentation
-- Security policy
-- Contributing guidelines (TPCF)
-- Governance model
 
-=== Security
-- Memory-safe Rust implementation
-- No unsafe code blocks
-- FIPS 202 compliant cryptography
-- Non-root container execution
-- Supply chain security (SPDX, pinned deps)
+* docs: record tech-debt audit findings (2026-05-26) (#43)
+* docs: substantive CRG C annotation (EXPLAINME.adoc)
+* docs: add EXPLAINME.adoc — prove-it file backing README claims
+* docs: add checkpoint files for state tracking
 
-== Migration Guide
+==== CI
 
-=== From v0.x to v1.0.0
+* ci(rust): convert rust-ci.yml to thin wrapper (standards#174) (#40)
+* ci: redistribute concurrency-cancel guard to read-only check workflows
+(#34)
+* ci(dependabot): restore cargo PR limit so security PRs flow (#16)
+* ci(secret-scanner): drop duplicate –fail from trufflehog extra_args
+(#15)
+* ci: bump actions/upload-artifact SHA to current v4 (#14)
 
-This is the initial release. No migration needed.
+=== Pre-history
 
-== Version History
+Prior commits to this file’s introduction are recorded in git history
+but not formally classified into Keep-a-Changelog sections. To backfill,
+run `+git cliff -o CHANGELOG.md+` locally using the canonical
+https://github.com/hyperpolymath/standards/blob/main/templates/cliff.toml[`+cliff.toml+`]
+— this is one-shot mechanical work.
 
-| Version | Release Date | Status |
-|---------|--------------|--------|
-| 1.0.0   | 2024-01-01   | Current |
-
-== Deprecation Policy
-
-- Deprecated features announced one minor version before removal
-- Migration guides provided for breaking changes
-- LTS branches may be created for critical security fixes
-
-[Unreleased]: https://huggingface.co/datasets/joshuajewell/VAEDecodedImages-SDXL/compare/v1.0.0...HEAD
-[1.0.0]: https://huggingface.co/datasets/joshuajewell/VAEDecodedImages-SDXL/releases/tag/v1.0.0
+'''''
