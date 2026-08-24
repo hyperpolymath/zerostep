@@ -1,13 +1,11 @@
-<!-- SPDX-FileCopyrightText: 2024 Joshua Jewell -->
-<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
-
-# Quick Start Guide
+== Quick Start Guide
 
 Get up and running with vae-normalizer in 5 minutes.
 
-## 1. Check Dependencies
+=== 1. Check Dependencies
 
-```bash
+[source,bash]
+----
 # Required
 rustc --version  # Need 1.70+
 cargo --version
@@ -16,23 +14,27 @@ cargo --version
 cue version
 nickel --version
 julia --version
-```
+----
 
-## 2. Build
+=== 2. Build
 
-```bash
+[source,bash]
+----
 cd vae-normalizer
 cargo build --release
-```
+----
 
 Or with just:
-```bash
+
+[source,bash]
+----
 just build
-```
+----
 
-## 3. Download Dataset
+=== 3. Download Dataset
 
-```bash
+[source,bash]
+----
 # Option A: Hugging Face CLI
 huggingface-cli download joshuajewell/VAEDecodedImages-SDXL \
     --local-dir ~/vae-dataset \
@@ -40,40 +42,47 @@ huggingface-cli download joshuajewell/VAEDecodedImages-SDXL \
 
 # Option B: Git
 git clone https://huggingface.co/datasets/joshuajewell/VAEDecodedImages-SDXL ~/vae-dataset
-```
+----
 
-## 4. Normalize
+=== 4. Normalize
 
 Fast mode (no checksums):
-```bash
+
+[source,bash]
+----
 ./target/release/vae-normalizer normalize \
     -d ~/vae-dataset \
     -o ~/vae-normalized \
     --skip-checksums
-```
+----
 
 Full mode with SHAKE256:
-```bash
+
+[source,bash]
+----
 ./target/release/vae-normalizer normalize \
     -d ~/vae-dataset \
     -o ~/vae-normalized
-```
+----
 
-## 5. Verify
+=== 5. Verify
 
-```bash
+[source,bash]
+----
 ./target/release/vae-normalizer verify -o ~/vae-normalized
-```
+----
 
-## 6. View Statistics
+=== 6. View Statistics
 
-```bash
+[source,bash]
+----
 ./target/release/vae-normalizer stats -o ~/vae-normalized
-```
+----
 
-## 7. Train a Model (Julia)
+=== 7. Train a Model (Julia)
 
-```julia
+[source,julia]
+----
 # Install dependencies
 using Pkg
 Pkg.add(["Flux", "CSV", "DataFrames", "Images", "FileIO"])
@@ -125,13 +134,14 @@ for epoch in 1:10
     acc = mean([accuracy(model, x, y) for (x, y) in test_loader])
     println("Epoch $epoch: accuracy = $(round(acc * 100, digits=1))%")
 end
-```
+----
 
-## Common Tasks
+=== Common Tasks
 
-### Compare Random vs Stratified Splits
+==== Compare Random vs Stratified Splits
 
-```julia
+[source,julia]
+----
 include("julia_utils.jl")
 using .VAEDatasetUtils
 
@@ -141,44 +151,50 @@ strat_train = VAEDetectorDataset("splits/stratified_train.txt", "manifest.csv", 
 
 println("Random train: $(length(random_train)) samples")
 println("Stratified train: $(length(strat_train)) samples")
-```
+----
 
-### Validate CUE Schema
+==== Validate CUE Schema
 
-```bash
+[source,bash]
+----
 cue vet metadata_schema.cue ~/vae-normalized/metadata.cue
-```
+----
 
-### Run Isabelle Proofs
+==== Run Isabelle Proofs
 
-```bash
+[source,bash]
+----
 isabelle build -d . -b VAEDataset_Splits
-```
+----
 
-### Hash a Single File
+==== Hash a Single File
 
-```bash
+[source,bash]
+----
 ./target/release/vae-normalizer hash ~/vae-dataset/Original/image001.png
-```
+----
 
-## Troubleshooting
+=== Troubleshooting
 
-**Build fails with "missing feature"**
-```bash
+*Build fails with "`missing feature`"*
+
+[source,bash]
+----
 rustup update
 cargo clean && cargo build --release
-```
+----
 
-**"No matching image pairs found"**
-- Check dataset structure: needs `Original/` and `VAE/` subdirectories
-- Image filenames must match (same stem, any extension)
+*"`No matching image pairs found`"* - Check dataset structure: needs
+`+Original/+` and `+VAE/+` subdirectories - Image filenames must match
+(same stem, any extension)
 
-**Out of memory during checksumming**
-- Use `--skip-checksums` for large datasets
-- Or process in batches
+*Out of memory during checksumming* - Use `+--skip-checksums+` for large
+datasets - Or process in batches
 
-**Julia: "Images package not found"**
-```julia
+*Julia: "`Images package not found`"*
+
+[source,julia]
+----
 using Pkg
 Pkg.add("Images")
-```
+----
