@@ -8,7 +8,7 @@ image:https://img.shields.io/badge/License-MPL--2.0-blue.svg[License: PMPL-1.0,l
 :icons: font
 :source-highlighter: rouge
 
-Normalize VAE-decoded image datasets for training AI artifact detection models with formal verification guarantees and RSR (Rhodium Standard Repository) compliance.
+Normalize VAE-decoded image datasets for training AI artifact detection models, with an Isabelle/HOL theory of the split properties (not yet machine-checked) and RSR (Rhodium Standard Repository) compliance.
 
 toc::[]
 
@@ -24,7 +24,7 @@ This project is fully compliant with the **Rhodium Standard Repository (RSR)** s
 * **Train/Test/Val/Calibration splits** (70/15/10/5) - both random and stratified
 * **Dublin Core metadata** via CUE configuration language
 * **Nickel schema** for flexible configuration
-* **Isabelle/HOL proofs** for split property verification
+* **Isabelle/HOL theory** of split properties over an abstract model (not yet machine-checked; see <<formal-verification>>)
 * **Julia/Flux.jl utilities** for training integration
 * **Contrastive learning model** for VAE artifact detection
 * **Diff-based compression** reducing storage by ~50%
@@ -40,7 +40,7 @@ Optional::
 * https://cuelang.org[CUE] - metadata validation
 * https://nickel-lang.org[Nickel] - configuration
 * https://julialang.org[Julia] - training utilities
-* https://isabelle.in.tum.de[Isabelle] - formal proofs
+* https://isabelle.in.tum.de[Isabelle] - to check the split theory
 * https://github.com/casey/just[just] - modern task runner
 * https://podman.io[Podman] - container runtime (never Docker)
 
@@ -193,16 +193,37 @@ compressed/
 
 Diff images compress well (~50% smaller) because most pixels cluster near 128 (gray) when VAE and original are similar.
 
+[[formal-verification]]
 == Formal Verification
 
-The Isabelle/HOL theory `VAEDataset_Splits.thy` proves:
+*Status: `argued`* (standards `3-practice/PROOF-POLICY.adoc` §5). The theory has
+not been machine-checked. No workflow runs Isabelle, and the repository has no
+Isabelle `ROOT` file, so the build command below cannot find the session yet.
 
-1. **Disjointness**: No overlap between train/test/val/calibration sets
-2. **Exhaustiveness**: Every image appears in exactly one split
-3. **Ratio correctness**: Split sizes within 1% of targets
-4. **Bijection**: 1:1 correspondence between original and VAE images
+`VAEDataset_Splits.thy` states lemmas about an *abstract* split assignment, a
+function from image ids to an optional split. It is not connected to the Rust
+code: nothing in it models `assign_split_by_index` or `partition_pairs` in
+`src/lib.rs`. What each lemma states:
 
-To verify proofs:
+1. *Disjointness* (`disjoint_from_function`): a function-based assignment puts
+   each image in at most one split. This holds for every function.
+2. *Partition* (`split_partition`): if every image in a finite set is assigned,
+   the set's size is the sum of the split sizes. Exhaustiveness is a hypothesis.
+3. *Ratios* (`ratio_correctness`): the four split fractions sum to 1. The 1%
+   tolerances are hypotheses; nothing proves the split sizes meet them, and
+   with integer floors they do not for small datasets (`assign_split_by_index`
+   gives 7/1/1/1 for 10 items, so Test is 10% against a 15% target).
+4. *Bijection* (`bijection_preserved`): if the original and VAE images are in
+   bijection, their counts agree. The bijection is a hypothesis.
+5. *Stratification* (`stratified_maintains_ratio`) restates its hypothesis.
+6. *Checksums*: the `shake256` locale assumes only determinism and a 32-byte
+   length, with no collision resistance. It proves nothing about bit flips or
+   tampering.
+
+Planned: a `ROOT` file and a CI job that runs the build, and a model of the
+Rust split function so that the lemmas say something about the code.
+
+To check the theory (once a `ROOT` file for the session exists):
 [source,bash]
 ----
 isabelle build -d . -b VAEDataset_Splits

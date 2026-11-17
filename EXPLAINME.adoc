@@ -46,13 +46,13 @@ vae-normalizer verify --checksums -d /path/to/output
 +
 This re-computes hashes and compares against manifest. Any mismatch (bit flip, corruption, tampering) is detected and reported.
 
-4. **Formal Proof** (Isabelle/HOL): The theorem `VAEDataset_Splits.thy` (lines 120-140) proves that if all hashes match, the bijection property holds: every Original image has exactly one matching VAE image.
+4. **No formal proof covers this.** `VAEDataset_Splits.thy` does not prove that matching hashes imply the bijection. `bijection_preserved` (line 170) assumes the bijection, and the `shake256` locale (line 212) assumes only `hash x = hash x` and a fixed length, with no collision resistance. The theory has not been machine-checked (status `argued`, standards PROOF-POLICY §5).
 
 **Code Evidence:**
 - SHAKE256 implementation: `src/main.rs` lines 48-54 (uses `tiny_keccak` crate)
 - Manifest generation: `src/metadata.rs` lines 36-85 (writes CSV with hashes)
 - Hash verification: `src/main.rs` lines 200-250 (command `verify`)
-- Isabelle proof: `theories/VAEDataset_Splits.thy` lines 120-140 (Isabelle/HOL theorem proving no bit flips)
+- Isabelle theory: `VAEDataset_Splits.thy` (repository root). It proves nothing about bit flips; see item 4.
 
 === Why This Design
 
@@ -72,11 +72,11 @@ The manifest CSV can be modified post-generation. Computing hashes proves data i
 
 ---
 
-== README Claim 2: Train/Test/Val/Calibration Splits with Formal Proof of Disjointness
+== README Claim 2: Train/Test/Val/Calibration Splits (formal proof not yet checked)
 
 [quote, README]
 ____
-Train/Test/Val/Calibration splits (70/15/10/5) with formal proofs of correctness via Isabelle/HOL.
+Train/Test/Val/Calibration splits (70/15/10/5) - both random and stratified
 ____
 
 === How It Works
@@ -113,13 +113,16 @@ output/splits/
 └── random_calibration.txt    # 5%
 ----
 
-4. **Formal Verification** (Isabelle/HOL):
-   The theorem `VAEDataset_Splits.thy` (lines 1-50) proves three properties:
-   - **Disjointness**: ∀i. i ∈ Train ⟹ i ∉ Test ∧ i ∉ Val ∧ i ∉ Calibration
-   - **Exhaustiveness**: ∀i. i ∈ Dataset ⟹ i ∈ Train ∨ i ∈ Test ∨ i ∈ Val ∨ i ∈ Calibration
-   - **Ratio Correctness**: |Train| / |Dataset| ≈ 0.70 (within 1% tolerance)
+4. **Formal Verification** (Isabelle/HOL), status `argued`: not machine-checked,
+   no CI job, and no `ROOT` file yet. `VAEDataset_Splits.thy` states lemmas about
+   an abstract split function, not the Rust code:
+   - **Disjointness** (`disjoint_from_function`): holds for any function-based assignment
+   - **Partition** (`split_partition`): assumes every image is assigned
+   - **Ratios** (`ratio_correctness`): proves the four fractions sum to 1; the 1%
+     tolerances are hypotheses, and `assign_split_by_index` does not meet them
+     for small datasets (7/1/1/1 for 10 items)
 
-   To verify:
+   To check (once a `ROOT` file exists):
 +
 [source,bash]
 ----
@@ -129,7 +132,7 @@ isabelle build -d . -b VAEDataset_Splits
 **Code Evidence:**
 - Random split: `src/main.rs` lines 100-150
 - Stratified split: `src/main.rs` lines 160-200
-- Formal proof: `theories/VAEDataset_Splits.thy` (complete Isabelle/HOL theory)
+- Isabelle theory: `VAEDataset_Splits.thy` (repository root; abstract model, not machine-checked)
 - Output schema: `src/metadata.rs` lines 90-120 (writes manifest with split assignments)
 
 === Why This Design
@@ -139,14 +142,12 @@ Formal verification of splits matters for ML research:
 - **Correctness Proof**: No accidental data leakage (test data in train set causes overfitting)
 - **Publishing Confidence**: Paper reviewers can verify splits were computed correctly
 
-=== Honest Caveat: Proof Assumes Deterministic RNG, No Bit Flips
+=== Honest Caveat: The Theory Does Not Model the Code
 
-The Isabelle proof assumes:
-1. The ChaCha8 RNG behaves deterministically given the same seed
-2. The split indices are computed correctly (no integer overflow)
-3. The output files are written correctly (no data loss during I/O)
-
-If the RNG implementation has a bug, or if the system experiences a cosmic ray bit flip during file write, the proof is invalidated. However, such failures are exceedingly rare in practice.
+The Isabelle theory has no model of the RNG, the index arithmetic or file I/O.
+Its lemmas hold for an abstract split function under stated hypotheses, and
+nothing yet links them to `src/lib.rs`. It has also not been machine-checked.
+Until both are done, split correctness rests on the code and its tests.
 
 **Mitigation**: Test splits on small datasets first (manual inspection), then scale. If reproducibility is critical, store hashes of split files alongside the proof artifact.
 
@@ -164,7 +165,7 @@ If the RNG implementation has a bug, or if the system experiences a cosmic ray b
 | **Image I/O** | `image` crate | PNG/JPEG support, handles pixel format conversions
 | **Manifest Schema** | CUE language | Dublin Core metadata validation
 | **Config** | Nickel | Typed configuration language for flexible CLI options
-| **Formal Proofs** | Isabelle/HOL | Prove split properties, disjointness, ratio correctness
+| **Formal Proofs** | Isabelle/HOL | State split lemmas over an abstract model (not yet machine-checked)
 | **Training** | Julia + Flux.jl | Contrastive learning model for VAE artifact detection
 | **Persistence** | Rust serde + JSON | Serialization of split metadata, portable across systems
 |===
@@ -182,7 +183,7 @@ If the RNG implementation has a bug, or if the system experiences a cosmic ray b
 | `src/split.rs` | Random and stratified split algorithms
 | `src/crypto.rs` | SHAKE256 checksum computation and verification
 | `src/compress.rs` | Diff encoding/decoding for space-efficient storage
-| `theories/VAEDataset_Splits.thy` | Isabelle/HOL proofs (disjointness, exhaustiveness, ratio)
+| `VAEDataset_Splits.thy` | Isabelle/HOL theory (abstract split lemmas; not machine-checked)
 | `julia_utils.jl` | Julia utilities for loading split files and training models
 | `julia_utils/contrastive_model.jl` | Contrastive learning model (detects VAE vs. original)
 | `examples/` | Example datasets and configs (test data for manual verification)
@@ -201,7 +202,7 @@ If the RNG implementation has a bug, or if the system experiences a cosmic ray b
 |===
 | Standard | Usage | Status
 
-| **ABI/FFI (Idris2 + Zig)** | Split algorithm formally verified in Isabelle/HOL; future: Idris2 ABI for split proofs
+| **ABI/FFI (Idris2 + Zig)** | Abstract split lemmas in Isabelle/HOL, not machine-checked and not linked to the Rust code; future: Idris2 ABI for split proofs
 | Status: Phase 2 (Idris2 FFI to Rust split module planned)
 
 | **Hyperpolymath Language Policy** | Rust (CLI), Julia (training), Isabelle (proofs), no TypeScript/Python/Go
@@ -210,14 +211,14 @@ If the RNG implementation has a bug, or if the system experiences a cosmic ray b
 | **MPL-2.0 License** | Primary license; all Rust files carry header
 | Declared at repo root and in every .rs file
 
-| **Formal Verification** | Isabelle/HOL proofs guarantee split correctness (disjointness, exhaustiveness, ratio)
-| Status: Complete; 3 theorems proven (`splits_disjoint`, `splits_exhaustive`, `ratio_correct`)
+| **Formal Verification** | Isabelle/HOL theory stating split lemmas for an abstract model
+| Status: `argued` (not machine-checked; no CI job). Lemmas: `disjoint_from_function`, `split_partition`, `ratio_correctness`, `bijection_preserved`, `stratified_maintains_ratio`
 
 | **PanLL Integration** | Pre-built monitoring panel for split statistics, model training progress
 | Status: `panels/vae-normalizer/` (v0.1.0, shows split sizes, training epochs, loss curves)
 
-| **Hypatia CI/CD** | Clippy linting, cargo-audit for CVEs, Isabelle theorem checking in CI
-| 9 workflows active; formal proof verification on every commit
+| **Hypatia CI/CD** | Clippy linting, cargo-audit for CVEs
+| No workflow runs Isabelle; the theory is not checked in CI
 
 | **Interdependency Tracking** | This project may use proven-types for verified array operations (future)
 | Declared in `.machine_readable/ECOSYSTEM.a2ml`
@@ -308,21 +309,21 @@ git clone https://github.com/isabelle-prover/isabelle
 cd isabelle && ./build
 ----
 
-2. Verify theorems:
+2. Check the theory:
 +
 [source,bash]
 ----
 cd /var/mnt/eclipse/repos/zerostep
+# Needs an Isabelle ROOT file for the session first; none exists yet.
 isabelle build -d . -b VAEDataset_Splits
-# Output: Build session VAEDataset_Splits — 100% complete
 ----
 
 3. Inspect proof:
 +
 [source,bash]
 ----
-cat theories/VAEDataset_Splits.thy | grep "theorem\|lemma" | head
-# Lists all proven propositions
+grep -n "theorem\|lemma" VAEDataset_Splits.thy
+# Lists the stated lemmas (not yet machine-checked)
 ----
 
 ---
