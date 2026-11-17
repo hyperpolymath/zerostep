@@ -162,6 +162,9 @@ cue vet metadata_schema.cue ~/vae-normalized/metadata.cue
 
 ==== Run Isabelle Proofs
 
+The theory has not been machine-checked yet, and the repository has no Isabelle
+`ROOT` file, so this command needs one first. See README, Formal Verification.
+
 [source,bash]
 ----
 isabelle build -d . -b VAEDataset_Splits

@@ -5,14 +5,16 @@
   VAE Dataset Splits - Formal Verification
   =========================================
 
-  This Isabelle/HOL theory proves correctness properties for dataset splits
-  used in training VAE artifact detection models.
+  This Isabelle/HOL theory states properties of an abstract split assignment
+  (a function from image ids to an optional split) used to describe dataset
+  splits for VAE artifact detection models. It does not model the Rust code
+  in src/lib.rs, and it has not yet been machine-checked (no ROOT file, no CI).
 
-  Properties proven:
-  1. Disjointness: No overlap between train/test/val/calibration sets
-  2. Exhaustiveness: Every image is in exactly one split
-  3. Ratio correctness: Split sizes are within tolerance of target ratios
-  4. Bijection: Original and VAE image sets have 1:1 correspondence
+  Lemmas stated:
+  1. Disjointness: a function-based assignment puts each image in at most one split
+  2. Partition: if every image is assigned, the split sizes sum to the total
+  3. Ratios: the four split fractions sum to 1 (tolerances are hypotheses)
+  4. Bijection: an assumed original/VAE bijection preserves cardinality
 
   Author: VAE-Normalizer Generator
   Date: 2024
@@ -228,7 +230,7 @@ end
 section \<open>Summary\<close>
 
 text \<open>
-  This theory establishes the formal correctness of VAE dataset splits:
+  This theory states the following lemmas about an abstract split model:
 
   1. @{thm disjoint_from_function}: Any function-based split assignment is disjoint
   2. @{thm split_partition}: Exhaustive splits partition the dataset
@@ -236,8 +238,9 @@ text \<open>
   4. @{thm bijection_preserved}: Original-VAE bijection preserves cardinality
   5. @{thm stratified_maintains_ratio}: Stratification preserves ratios per stratum
 
-  These properties guarantee that the split generation algorithm in vae-normalizer
-  produces valid, well-formed dataset partitions suitable for training.
+  These lemmas are about the abstract model only. Nothing here yet connects
+  them to the split algorithm in src/lib.rs, and the shake256 locale assumes
+  no collision resistance, so it says nothing about bit flips or tampering.
 \<close>
 
 end
