@@ -14,7 +14,7 @@ toc::[]
 
 == Overview
 
-The VAE Dataset Normalizer prepares VAE-decoded image datasets for machine learning research. It provides cryptographically verified data splits, formal proofs of correctness, and contrastive learning models to detect VAE artifacts.
+The VAE Dataset Normalizer prepares VAE-decoded image datasets for machine learning research. It provides data splits with SHAKE256 integrity checksums, an Isabelle/HOL theory of split properties over an abstract model (not yet machine-checked; see <<formal-verification>>), and contrastive learning models to detect VAE artifacts.
 
 This project is fully compliant with the **Rhodium Standard Repository (RSR)** specification, ensuring reproducibility, security, and accountability.
 
