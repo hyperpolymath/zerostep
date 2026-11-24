@@ -7,6 +7,20 @@
 * *Existing ABI proofs*: `+src/abi/*.idr+` (template-level)
 * *Dangerous patterns*: None detected
 
+=== Isabelle split theory (`VAEDataset_Splits.thy`)
+
+* *Status*: `argued` (standards PROOF-POLICY §5). Never machine-checked: no
+Isabelle `ROOT` file, no CI job.
+* It states lemmas about an abstract split function. Several conclusions are
+its own hypotheses (`bijection_preserved`, `stratified_maintains_ratio`), and
+the `shake256` locale assumes no collision resistance.
+* `open`: add a `ROOT` file and a CI job, and record the result.
+* `open`: model `assign_split_by_index` (`src/lib.rs`) and prove the split
+properties of that model. Note that the 1% ratio tolerance does not hold for
+small datasets (10 items split 7/1/1/1).
+* Isabelle is not the prover PROOF-POLICY assigns to Rust code
+(Creusot with Pearlite, and Verus); proofs about `src/lib.rs` belong there.
+
 === What Needs Proving
 
 ==== VAE Dataset Normalization (Julia core)
