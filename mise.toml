@@ -6,7 +6,6 @@ bun = "1.4"
 
 # Package managers
 cargo = "latest"
-go-task = "latest"
 
 # Formatting & Linting
 shfmt = "latest"
@@ -26,10 +25,6 @@ gnu-grep = "latest"
 
 [env]
 # Common environment variables
-
-# Task runner alias
-[alias]
-task = "go-task"
 
 [tasks.setup]
 description = "Install pinned JS dev tools (Prettier) from bun.lock"
